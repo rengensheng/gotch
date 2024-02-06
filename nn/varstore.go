@@ -209,12 +209,21 @@ func (vs *VarStore) LoadWeights(namedTensors []ts.NamedTensor) error {
 	vs.Lock()
 	defer vs.Unlock()
 
-	for name, v := range vs.vars {
+	for tmpName, v := range vs.vars {
 		// missing variable
-		currTs, ok := namedTensorsMap[name]
+		currTs, ok := namedTensorsMap[tmpName]
+		if !ok {
+			//尝试使用
+			tmpName = strings.Replace(tmpName, "gamma", "weight", -1)
+			tmpName = strings.Replace(tmpName, "beta", "bias", -1)
+		}
+		name := tmpName
+		currTs, ok = namedTensorsMap[tmpName]
 		if !ok {
 			err := fmt.Errorf("VarStore.LoadWeights() failed: there's a tensor with name %q in VarStore, but not found in the loaded weights.\n", name)
-			return err
+			fmt.Println(err)
+			continue
+			//return err
 		}
 
 		// mismatched shape
